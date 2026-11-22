@@ -56,11 +56,18 @@ export default function Hud() {
             <span aria-hidden>←</span> Index
           </Link>
           <div className="sg-title">
-            <span className="sg-index">01</span>
+            <span className="sg-index kinetic-index">01</span>
             <div>
               <span className="meta">Kaloyan&apos;s Lab / Games</span>
-              <h1>
-                Shell Game<span className="dot">.</span>
+              <h1 className="kinetic" aria-label="Shell Game">
+                {"Shell Game".split("").map((ch, i) => (
+                  <span key={i} aria-hidden style={{ animationDelay: `${0.5 + i * 0.035}s` }}>
+                    {ch === " " ? "\u00a0" : ch}
+                  </span>
+                ))}
+                <span className="dot" aria-hidden style={{ animationDelay: "0.9s" }}>
+                  .
+                </span>
               </h1>
             </div>
           </div>

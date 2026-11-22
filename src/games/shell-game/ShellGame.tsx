@@ -8,6 +8,7 @@ import * as THREE from "three";
 import Scene from "./Scene";
 import Hud from "./Hud";
 import { useShellGame } from "./store";
+import WipeOut from "@/components/WipeOut";
 
 function Loader() {
   const { progress, active } = useProgress();
@@ -66,6 +67,7 @@ export default function ShellGame() {
       </Canvas>
       <Loader />
       <Hud />
+      <WipeOut />
     </div>
   );
 }

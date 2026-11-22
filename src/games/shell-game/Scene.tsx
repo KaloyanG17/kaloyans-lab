@@ -21,7 +21,9 @@ import { isRaised, useShellGame } from "./store";
 
 /** Live cup poses written once per frame by <ShuffleDriver/>, read by cups and the pea. */
 const live: CupPose[] = SLOT_X.map((x) => ({ x, z: SLOT_Z, lean: 0 }));
-const liveLift = [0, 1, 2].map(() => ({ v: CUP_LIFT }));
+/** Lift above the felt, on a spring. Cups start high and drop in when the page opens. */
+const liveLift = [0, 1, 2].map(() => ({ v: 2.4, vel: 0 }));
+const DROP_DELAY = 0.9;
 
 function enableShadows(root: THREE.Object3D) {
   root.traverse((o) => {
@@ -88,6 +90,13 @@ function Cup({ index }: { index: number }) {
   const pickCup = useShellGame((s) => s.pickCup);
   const revealed = useShellGame((s) => s.revealed.includes(index));
 
+  const bornAt = useRef(-1);
+  // re-arm the drop-in every time the game opens
+  useEffect(() => {
+    liveLift[index].v = 2.4;
+    liveLift[index].vel = 0;
+  }, [index]);
+
   const clickable =
     phase === "hide" || phase === "won" || (phase === "guess" && !revealed);
   const isWinner = phase === "won" && peaCup === index;
@@ -99,8 +108,20 @@ function Cup({ index }: { index: number }) {
     const pose = live[index];
     const hoverLift = hovered && clickable && !raised ? 0.035 : 0;
     const targetLift = raised ? CUP_LIFT + (isWinner ? 0.1 : 0) : hoverLift;
-    easing.damp(liveLift[index], "v", targetLift, raised ? 0.16 : 0.12, dt);
-    const lift = liveLift[index].v;
+    const L = liveLift[index];
+    if (bornAt.current < 0) bornAt.current = state.clock.elapsedTime;
+    if (state.clock.elapsedTime - bornAt.current > DROP_DELAY + index * 0.14) {
+      // underdamped spring: lands with a small bounce. Fixed substeps keep it
+      // stable and on time even when the frame rate drops.
+      let left = Math.min(dt, 0.25);
+      while (left > 0) {
+        const h = Math.min(left, 1 / 240);
+        L.vel += (170 * (targetLift - L.v) - 13 * L.vel) * h;
+        L.v = Math.max(0, L.v + L.vel * h);
+        left -= h;
+      }
+    }
+    const lift = L.v;
 
     g.position.set(pose.x, TABLE_TOP + CUP_HEIGHT + lift, pose.z);
     // a little tilt while sliding, and a tip back toward the player when lifted
@@ -233,7 +254,7 @@ export default function Scene() {
       <color attach="background" args={["#e4e2dc"]} />
       <fog attach="fog" args={["#e4e2dc", 3.6, 9]} />
 
-      <SoftShadows size={18} samples={12} focus={0.6} />
+      <SoftShadows size={18} samples={8} focus={0.6} />
       <ShuffleDriver />
       <CameraRig />
 
