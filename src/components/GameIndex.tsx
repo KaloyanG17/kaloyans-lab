@@ -6,43 +6,79 @@ import { games } from "@/lib/games";
 import { startWipe } from "./transition";
 
 const pad = (n: number) => String(n).padStart(2, "0");
+const GLYPHS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#%&/<>01_";
 
-/** Swiss index of games, with a liquid-glass lens that rides the cursor over live rows. */
-export default function GameIndex() {
+/** Scrambles through glyphs and locks in left to right, like a value being decoded. */
+function useDecode(text: string) {
+  const [shown, setShown] = useState(text);
+  const timer = useRef<ReturnType<typeof setInterval>>(undefined);
+
+  const run = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    clearInterval(timer.current);
+    let frame = 0;
+    const total = text.length * 2;
+    timer.current = setInterval(() => {
+      frame++;
+      if (frame > total) {
+        clearInterval(timer.current);
+        setShown(text);
+        return;
+      }
+      setShown(
+        [...text]
+          .map((c, i) => (c === " " || i < frame / 2 ? c : GLYPHS[Math.floor(Math.random() * GLYPHS.length)]))
+          .join(""),
+      );
+    }, 32);
+  };
+
+  useEffect(() => () => clearInterval(timer.current), []);
+  return [shown, run] as const;
+}
+
+function Row({ index, slug, title, tags, year, live }: { index: number; slug: string; title: string; tags: string[]; year: number; live: boolean }) {
   const router = useRouter();
-  const lens = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState<string | null>(null);
+  const [shown, decode] = useDecode(title);
+  return (
+    <li>
+      <a
+        href={live ? `/games/${slug}` : undefined}
+        className={`row ${live ? "is-live" : "is-soon"}`}
+        aria-disabled={!live}
+        aria-label={live ? `Play ${title}` : undefined}
+        onPointerEnter={() => live && decode()}
+        onFocus={() => live && decode()}
+        onClick={(e) => {
+          e.preventDefault();
+          if (!live) return;
+          startWipe(e.clientX, e.clientY, () => router.push(`/games/${slug}`));
+        }}
+      >
+        <span className="row-spacer" aria-hidden />
+        <span className="row-no">{pad(index + 1)}</span>
+        <span className="row-title" aria-hidden={live}>
+          {live ? shown : "In the lab"}
+        </span>
+        <span className="row-meta hide-sm">{tags.join(" / ")}</span>
+        <span className="row-meta hide-sm">{year}</span>
+        <span className="row-status">
+          {live ? (
+            <>
+              Play <span className="row-arrow">→</span>
+            </>
+          ) : (
+            "Soon"
+          )}
+        </span>
+        <span className="row-rule" aria-hidden />
+      </a>
+    </li>
+  );
+}
 
-  useEffect(() => {
-    const el = lens.current;
-    if (!el) return;
-    let x = 0,
-      y = 0,
-      tx = 0,
-      ty = 0,
-      raf = 0;
-    const move = (e: PointerEvent) => {
-      tx = e.clientX;
-      ty = e.clientY;
-    };
-    const tick = () => {
-      x += (tx - x) * 0.18;
-      y += (ty - y) * 0.18;
-      const vx = tx - x;
-      const vy = ty - y;
-      const s = Math.min(Math.hypot(vx, vy) / 300, 0.35);
-      const a = Math.atan2(vy, vx);
-      el.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) rotate(${a}rad) scale(${1 + s}, ${1 - s * 0.5})`;
-      raf = requestAnimationFrame(tick);
-    };
-    window.addEventListener("pointermove", move);
-    raf = requestAnimationFrame(tick);
-    return () => {
-      window.removeEventListener("pointermove", move);
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-
+/** Swiss index of games. Hover decodes the title while red ink sweeps through it. */
+export default function GameIndex() {
   return (
     <section className="index" aria-label="Games">
       <header className="index-head">
@@ -54,37 +90,18 @@ export default function GameIndex() {
         <span className="meta">Status</span>
       </header>
       <ol className="rows">
-        {games.map((g, i) => {
-          const live = g.status === "live";
-          return (
-            <li key={g.slug}>
-              <a
-                href={live ? `/games/${g.slug}` : undefined}
-                className={`row ${live ? "is-live" : "is-soon"}`}
-                aria-disabled={!live}
-                onPointerEnter={() => live && setActive(g.slug)}
-                onPointerLeave={() => setActive(null)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!live) return;
-                  startWipe(e.clientX, e.clientY, () => router.push(`/games/${g.slug}`));
-                }}
-              >
-                <span className="row-fill" aria-hidden />
-                <span className="row-spacer" aria-hidden />
-                <span className="row-no">{pad(i + 1)}</span>
-                <span className="row-title">{live ? g.title : "In the lab"}</span>
-                <span className="row-meta hide-sm">{g.tags.join(" / ")}</span>
-                <span className="row-meta hide-sm">{g.year}</span>
-                <span className="row-status">{live ? "Play" : "Soon"}</span>
-              </a>
-            </li>
-          );
-        })}
+        {games.map((g, i) => (
+          <Row
+            key={g.slug}
+            index={i}
+            slug={g.slug}
+            title={g.title}
+            tags={g.tags}
+            year={g.year}
+            live={g.status === "live"}
+          />
+        ))}
       </ol>
-      <div ref={lens} className={`lens-cursor ${active ? "is-on" : ""}`} aria-hidden>
-        <span>Play ↗</span>
-      </div>
     </section>
   );
 }
