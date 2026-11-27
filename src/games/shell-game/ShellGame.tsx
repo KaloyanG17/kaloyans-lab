@@ -3,10 +3,10 @@
 import { Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { useProgress } from "@react-three/drei";
-import { Bloom, EffectComposer, Vignette, SMAA } from "@react-three/postprocessing";
+import { Bloom, EffectComposer, SMAA } from "@react-three/postprocessing";
 import * as THREE from "three";
 import Scene from "./Scene";
-import Hud from "./Hud";
+import { HudBottom, HudTop, StageFrame } from "./Hud";
 import { useShellGame } from "./store";
 import WipeOut from "@/components/WipeOut";
 
@@ -50,23 +50,26 @@ export default function ShellGame() {
   useKeyboard();
   return (
     <div className="sg-root">
-      <Canvas
-        shadows
-        dpr={[1, 2]}
-        camera={{ fov: 38, near: 0.05, far: 30, position: [0, 1.6, 1.55] }}
-        gl={{ antialias: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
-      >
-        <Suspense fallback={null}>
-          <Scene />
-          <EffectComposer multisampling={0}>
-            <SMAA />
-            <Bloom mipmapBlur intensity={0.4} luminanceThreshold={0.95} luminanceSmoothing={0.2} />
-            <Vignette eskil={false} offset={0.22} darkness={0.35} />
-          </EffectComposer>
-        </Suspense>
-      </Canvas>
-      <Loader />
-      <Hud />
+      <HudTop />
+      <div className="sg-stage">
+        <Canvas
+          shadows
+          dpr={[1, 2]}
+          camera={{ fov: 38, near: 0.05, far: 30, position: [0, 1.6, 1.55] }}
+          gl={{ antialias: false, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
+        >
+          <Suspense fallback={null}>
+            <Scene />
+            <EffectComposer multisampling={0}>
+              <SMAA />
+              <Bloom mipmapBlur intensity={0.35} luminanceThreshold={0.95} luminanceSmoothing={0.2} />
+            </EffectComposer>
+          </Suspense>
+        </Canvas>
+        <StageFrame />
+        <Loader />
+      </div>
+      <HudBottom />
       <WipeOut />
     </div>
   );

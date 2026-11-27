@@ -1,104 +1,130 @@
 "use client";
 
 import Link from "next/link";
-import { useShellGame } from "./store";
+import InkText from "@/components/ink/InkText";
+import { useShellGame, type Phase } from "./store";
 import { SHUFFLE_SECONDS } from "./shuffle";
+
+const pad = (n: number) => String(n).padStart(2, "0");
 
 function useMessage() {
   const phase = useShellGame((s) => s.phase);
   const guesses = useShellGame((s) => s.guesses);
   switch (phase) {
     case "hide":
-      return { title: "Choose a shell", sub: "Click the shell the pea should hide under — or press 1 · 2 · 3" };
+      return { title: "Choose a shell", sub: "Pick the shell the pea should hide under." };
     case "hiding":
-      return { title: "Hiding the pea…", sub: "Watch where it goes" };
+      return { title: "Hiding the pea", sub: "Watch where it goes." };
     case "ready":
-      return { title: "Ready when you are", sub: "Shuffle for five seconds, then find the pea" };
+      return { title: "Ready", sub: "Five seconds of shuffling. The pea always travels with its shell." };
     case "shuffling":
-      return { title: "Eyes on the pea", sub: "Don't blink" };
+      return { title: "Eyes on the pea", sub: "Don't blink." };
     case "guess":
       return guesses === 0
-        ? { title: "Where's the pea?", sub: "Click a shell to lift it" }
-        : { title: "Not under that one", sub: "Keep looking — the pea is still here" };
+        ? { title: "Where is it?", sub: "Pick a shell to lift it." }
+        : { title: "Not there", sub: "Keep looking. The pea is still on the table." };
     case "won":
       return guesses === 1
-        ? { title: "First try. Sharp eyes!", sub: "That counts as a win. Pick a shell to play again" }
-        : { title: `Found it in ${guesses} guesses`, sub: "Only first-try finds count as wins. Pick a shell to play again" };
+        ? { title: "First try", sub: "Counted as a win. Pick a shell to play again." }
+        : { title: `Found in ${guesses}`, sub: "Only first-try finds count as wins. Pick a shell to play again." };
   }
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="sg-stat">
-      <span className="sg-stat-value">{value}</span>
-      <span className="sg-stat-label">{label}</span>
-    </div>
-  );
-}
+const STEPS: { label: string; phases: Phase[] }[] = [
+  { label: "Hide", phases: ["hide", "hiding"] },
+  { label: "Shuffle", phases: ["ready", "shuffling"] },
+  { label: "Find", phases: ["guess", "won"] },
+];
 
-export default function Hud() {
+export function HudTop() {
   const phase = useShellGame((s) => s.phase);
-  const shuffle = useShellGame((s) => s.shuffle);
   const played = useShellGame((s) => s.played);
   const wins = useShellGame((s) => s.wins);
   const streak = useShellGame((s) => s.streak);
   const best = useShellGame((s) => s.bestStreak);
   const resetStats = useShellGame((s) => s.resetStats);
-  const shuffleStartedAt = useShellGame((s) => s.shuffleStartedAt);
-  const msg = useMessage();
-  const rate = played ? Math.round((wins / played) * 100) + "%" : "—";
+  const rate = played ? `${Math.round((wins / played) * 100)}%` : "—";
+
+  const stats = [
+    { label: "Played", value: pad(played) },
+    { label: "Wins", value: pad(wins) },
+    { label: "Win rate", value: rate },
+    { label: "Streak", value: best > streak ? `${streak}/${best}` : pad(streak) },
+  ];
 
   return (
-    <div className="sg-hud">
-      <header className="sg-top">
-        <div className="sg-left">
-          <Link href="/" className="sg-back glass glass-pill">
-            <span aria-hidden>←</span> Index
-          </Link>
-          <div className="sg-title">
-            <span className="sg-index kinetic-index">01</span>
-            <div>
-              <span className="meta">Kaloyan&apos;s Lab / Games</span>
-              <h1 className="kinetic" aria-label="Shell Game">
-                {"Shell Game".split("").map((ch, i) => (
-                  <span key={i} aria-hidden style={{ animationDelay: `${0.5 + i * 0.035}s` }}>
-                    {ch === " " ? "\u00a0" : ch}
-                  </span>
-                ))}
-                <span className="dot" aria-hidden style={{ animationDelay: "0.9s" }}>
-                  .
-                </span>
-              </h1>
-            </div>
-          </div>
-        </div>
-        <section className="glass sg-stats" aria-label="Score">
-          <Stat label="Played" value={played} />
-          <Stat label="Wins" value={wins} />
-          <Stat label="Win rate" value={rate} />
-          <Stat label="Streak" value={`${streak}${best > streak ? ` / ${best}` : ""}`} />
-          {played > 0 && (
-            <button className="sg-reset" onClick={resetStats} title="Reset score">
-              Reset
-            </button>
-          )}
-        </section>
-      </header>
+    <header className="sg-head">
+      <div className="grid sg-meta">
+        <Link href="/" className="meta sg-back">
+          ← Index
+        </Link>
+        <span className="meta sg-crumb">Keys 1 · 2 · 3 / Space</span>
+        <ol className="sg-steps" aria-label="Round">
+          {STEPS.map((s, i) => (
+            <li key={s.label} className={`meta ${s.phases.includes(phase) ? "is-now" : ""}`}>
+              {pad(i + 1)} {s.label}
+            </li>
+          ))}
+        </ol>
+        <button className="meta sg-reset" onClick={resetStats} disabled={played === 0}>
+          Reset score
+        </button>
+      </div>
 
-      <footer className="sg-bottom">
-        <div className={`glass sg-status ${phase === "won" ? "is-won" : ""}`} aria-live="polite" key={msg.title}>
-          <h2>{msg.title}</h2>
-          <p>{msg.sub}</p>
-          {phase === "shuffling" && (
-            <div className="sg-progress" key={shuffleStartedAt}>
-              <span style={{ animationDuration: `${SHUFFLE_SECONDS}s` }} />
+      <div className="grid sg-titlebar">
+        <h1 className="sg-title">
+          <InkText text="Shell Game" brush intro introDelay={500} />
+          <span className="pea" aria-hidden />
+        </h1>
+        <dl className="sg-stats" aria-label="Score">
+          {stats.map((s) => (
+            <div key={s.label}>
+              <dt>{s.label}</dt>
+              <dd>{s.value}</dd>
             </div>
-          )}
+          ))}
+        </dl>
+      </div>
+    </header>
+  );
+}
+
+export function HudBottom() {
+  const phase = useShellGame((s) => s.phase);
+  const shuffle = useShellGame((s) => s.shuffle);
+  const shuffleStartedAt = useShellGame((s) => s.shuffleStartedAt);
+  const msg = useMessage();
+
+  return (
+    <footer className={`sg-foot ${phase === "won" ? "is-won" : ""}`}>
+      <div className="sg-rule" aria-hidden>
+        {phase === "shuffling" && <span key={shuffleStartedAt} style={{ animationDuration: `${SHUFFLE_SECONDS}s` }} />}
+      </div>
+      <div className="grid sg-foot-row">
+        <div className="sg-status" aria-live="polite">
+          <h2 key={msg.title}>
+            <InkText text={msg.title} intro />
+          </h2>
+          <p>{msg.sub}</p>
         </div>
         <button className="sg-cta" onClick={shuffle} disabled={phase !== "ready"} data-visible={phase === "ready"}>
-          Shuffle <kbd>Space</kbd>
+          <span>Shuffle</span>
+          <kbd>Space</kbd>
         </button>
-      </footer>
+      </div>
+    </footer>
+  );
+}
+
+/** Registration marks and a figure caption around the 3D stage. */
+export function StageFrame() {
+  return (
+    <div className="sg-frame" aria-hidden>
+      <span className="mark tl" />
+      <span className="mark tr" />
+      <span className="mark bl" />
+      <span className="mark br" />
+      <span className="meta sg-fig">Fig. 01 — Table, three shells, one pea</span>
     </div>
   );
 }

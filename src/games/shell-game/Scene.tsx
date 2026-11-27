@@ -251,8 +251,8 @@ function CameraRig() {
 export default function Scene() {
   return (
     <>
-      <color attach="background" args={["#e4e2dc"]} />
-      <fog attach="fog" args={["#e4e2dc", 3.6, 9]} />
+      <color attach="background" args={["#e8e6e1"]} />
+      <fog attach="fog" args={["#e8e6e1", 3.6, 9]} />
 
       <SoftShadows size={18} samples={8} focus={0.6} />
       <ShuffleDriver />
@@ -270,7 +270,7 @@ export default function Scene() {
         shadow-mapSize={[2048, 2048]}
         shadow-bias={-0.0002}
       />
-      <pointLight position={[-1.6, 1.4, -1]} intensity={2} color="#ff6a4d" />
+      <pointLight position={[-1.6, 1.4, -1]} intensity={1.2} color="#ffffff" />
 
       <Environment resolution={256} frames={1}>
         <Lightformer form="rect" intensity={2.5} position={[0, 4, 1]} scale={[4, 1, 1]} color="#fff3dc" />
@@ -291,7 +291,7 @@ export default function Scene() {
       {/* floor */}
       <mesh rotation-x={-Math.PI / 2} receiveShadow>
         <planeGeometry args={[30, 30]} />
-        <meshStandardMaterial color="#dddad3" roughness={1} />
+        <meshStandardMaterial color="#e6e4df" roughness={1} />
       </mesh>
       <ContactShadows position={[0, 0.001, 0]} opacity={0.45} scale={5} blur={2.8} far={1} />
     </>
