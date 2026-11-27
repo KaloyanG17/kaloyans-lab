@@ -2,7 +2,7 @@
 
 Live at **https://kaloyan.vercel.app/lab** — a collection of small, polished, playable experiments, built with **Next.js 15 · React 19 · TypeScript · React Three Fiber**.
 
-Design language: Swiss grid typography × liquid glass.
+Design language: Swiss grid typography × ink.
 
 ## Games
 
