@@ -13,8 +13,11 @@ export const PEA_RADIUS = 0.034;
 /** Where the pea waits before it is hidden. */
 export const PEA_HOME = { x: 0, z: 0.36 } as const;
 
+/** Public files are not prefixed automatically, so add the lab's base path. */
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const MODELS = {
-  cup: "/models/leather-dice-cup-f99a7e.glb",
-  table: "/models/gaming-table-5ca9d5.glb",
-  coins: "/models/gold-coin-stack-a9ef52.glb",
+  cup: `${BASE}/models/leather-dice-cup-f99a7e.glb`,
+  table: `${BASE}/models/gaming-table-5ca9d5.glb`,
+  coins: `${BASE}/models/gold-coin-stack-a9ef52.glb`,
 } as const;

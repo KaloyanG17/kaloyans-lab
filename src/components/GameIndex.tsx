@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { games, type GameEntry } from "@/lib/games";
@@ -15,8 +16,8 @@ function Row({ game, index }: { game: GameEntry; index: number }) {
 
   return (
     <li>
-      <a
-        href={live ? `/games/${game.slug}` : undefined}
+      <Link
+        href={live ? `/games/${game.slug}` : "#index"}
         className={`row grid ${live ? "is-live" : "is-soon"} ${hot ? "is-hot" : ""}`}
         aria-disabled={!live}
         onPointerEnter={() => live && setHot(true)}
@@ -45,7 +46,7 @@ function Row({ game, index }: { game: GameEntry; index: number }) {
           )}
         </span>
         <span className="row-rule" aria-hidden />
-      </a>
+      </Link>
     </li>
   );
 }
