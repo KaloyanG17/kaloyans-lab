@@ -1,15 +1,14 @@
-import Hero from "@/components/lens";
+import Hero from "@/components/Hero";
 import GameIndex from "@/components/GameIndex";
 
 export default function LabIndex() {
   return (
     <>
-      <div className="grain" aria-hidden />
-      <header className="topbar">
+      <header className="topbar grid">
         <span className="mark">
           K<span className="dot">.</span>L
         </span>
-        <a className="meta" href="https://github.com/KaloyanG17/kaloyans-lab" target="_blank" rel="noreferrer">
+        <a className="meta topbar-link" href="https://github.com/KaloyanG17/kaloyans-lab" target="_blank" rel="noreferrer">
           Source ↗
         </a>
       </header>
@@ -17,9 +16,9 @@ export default function LabIndex() {
         <Hero />
         <GameIndex />
       </main>
-      <footer className="foot">
-        <span className="meta">© {new Date().getFullYear()} Kaloyan</span>
-        <span className="meta">
+      <footer className="foot grid">
+        <span className="meta c1">© {new Date().getFullYear()} Kaloyan</span>
+        <span className="meta c4">
           3D models — <a href="https://polyfork.dev" target="_blank" rel="noreferrer">Polyfork</a>, CC BY 4.0
         </span>
       </footer>
