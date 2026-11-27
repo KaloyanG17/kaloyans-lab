@@ -1,6 +1,6 @@
 # Kaloyan's Lab
 
-A collection of small, polished, playable experiments, built with **Next.js 15 · React 19 · TypeScript · React Three Fiber**.
+Live at **https://kaloyan.vercel.app/lab** — a collection of small, polished, playable experiments, built with **Next.js 15 · React 19 · TypeScript · React Three Fiber**.
 
 Design language: Swiss grid typography × liquid glass.
 
@@ -27,6 +27,7 @@ Requires Node 18.18+.
 ```bash
 npm install
 npm run dev
+# open http://localhost:3000/lab
 ```
 
 ## Adding a game
